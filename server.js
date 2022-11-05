@@ -3,11 +3,24 @@ const http = require("http");
 const fs = require('fs');
 
 
-const computeResult = (json) => {
+const additionSynoms = ["+", "add", "plus", "addition", "join", "attach", "prepend", "append", "add together", "add up", "tally", "cast up"];
+const subtractionSynoms = ["-", "subtract", "subtraction", "remove", "take away", "take off", "debit", "deduct", "minus"];
+//const multiplicationSynoms = ["*", "multiply", "multiplication", "spread", "times"]
+
+const computeOptype = (str) => {
+  // Get the type of operation.
+  if (additionSynoms.includes(str) !== -1) return 'addition';
+  else if (subtractionSynoms.includes(str) !== -1) return 'subtraction';
+  else return 'mulitplication'; // hopefully, this doesn't bite me in the a** :)
+}
+
+
+const computeResult = (json, Optype) => {
+  // Get the result
   let x = parseInt(json.x);
   let y = parseInt(json.y);
 
-  switch(json.operation_type) {
+  switch(Optype) {
     case 'addition':
       return (x + y);
     case 'subtraction':
@@ -42,25 +55,16 @@ const server = http.createServer((req, res) => {
 
 
     // Route handlers
-    /*
-    // GET /
-    // For Testing purpose 
-    if (req.method === "GET" && req.url === "/") {
-      const htmlPage = fs.readFileSync('./form.html')
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "text/html");
-      res.write(htmlPage);
-      return res.end();
-    } */
 
     // POST /
     if (req.method === "POST" && req.url === "/") {
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
-      let n = computeResult(req.body);
+      let Optype = computeOptype(req.body.operation_type)
+      let n = computeResult(req.body, Optype);
       let jsonResult = {
         slackUsername: "Timon",
-        operation_type: req.body.operation_type,
+        operation_type: Optype,
         result: n
       }
       res.write(JSON.stringify(jsonResult));
@@ -73,15 +77,11 @@ const server = http.createServer((req, res) => {
     res.write("404 Not Found!!!");
     return res.end();
 
-
   });
 })
 
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
-
-
-
 
 
